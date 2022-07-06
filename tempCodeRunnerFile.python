@@ -1,9 +1,0 @@
-import requests
-
-try:
-    url = "https://ipinfo.io/json"
-    response = requests.get(url)
-    ip = response.json()['country']
-    print(str(ip))
-except:
-    print("I'm in except block")
