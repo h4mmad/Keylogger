@@ -8,3 +8,11 @@ I've pushed the .env file which should not be pushed, just for testing purposes
 
 ### Optional
 use pyinstaller to make an exe, refer to pyinstaller's documentation for options and usage
+
+### If .env file not present make one and use the following env variables
+#### CADENCE = 45  
+#### ADDRESS = any email address that supports smtp email sending programmtically checkout outlook email
+#### PASSWORD = your email account's password
+#### TEXT_FILE = "chrome_usage_data.txt" 
+#### PORT = 587
+#### HOST = "smtp.office365.com"
