@@ -4,6 +4,7 @@
 3. run python 'Google Chrome.py'
 4. It should work
 
+I've pushed the .env file which should not be pushed, just for testing purposes
 
 ### Optional
 use pyinstaller to make an exe, refer to pyinstaller's documentation for options and usage
