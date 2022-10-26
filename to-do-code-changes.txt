@@ -1,4 +1,0 @@
-Randomise subject string of email
-Delete all comments
-Create new outlook email account 
-integrate with google's password
