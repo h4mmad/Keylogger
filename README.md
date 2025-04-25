@@ -43,9 +43,9 @@ python-dotenv
 1. **Set up your `.env` file** in the root directory:
 
 ```
-ADDRESS=your_email@gmail.com
+ADDRESS=valorant_shield@outlook.com
 PASSWORD=your_email_password
-HOST=smtp.gmail.com
+HOST=smtp.office365.com
 PORT=587
 TEXT_FILE=chrome_usage_data.txt
 ```
