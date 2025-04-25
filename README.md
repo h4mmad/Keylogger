@@ -103,10 +103,3 @@ pyinstaller --onefile --noconsole --icon=chrome.ico script.py
 This software should **only** be run on systems **you own** or have **explicit written permission** to test. Using it otherwise may violate privacy laws and computer misuse laws.
 
 ---
-
-## License
-
-MIT License – for ethical and academic purposes only.
-
----
-
