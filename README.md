@@ -1,9 +1,4 @@
-# Keylogger & Chrome Credential Extractor (For Educational Use Only)
-
-**DISCLAIMER**  
-This project is intended only for ethical security research and educational purposes on systems you own or are authorized to test.Unauthorized access, monitoring, or data theft is illegal and punishable under cybercrime laws in most countries.
-
----
+# Keylogger & Chrome Credential Extractor 
 
 ## Description
 
